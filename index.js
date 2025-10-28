@@ -6,6 +6,7 @@ const cors = require("cors");
 const PORT = process.env.PORT || 3001;
 
 app.use(cors());
+app.use(express.json());
 
 const uri = `mongodb+srv://${process.env.DB_USERNAME}:${process.env.DB_PASSWORD}@cluster0.to58y.mongodb.net/?appName=Cluster0`;
 
@@ -23,6 +24,15 @@ async function run() {
     // Connect the client to the server (Optional starting in v4.7)
     await client.connect();
 
+    const usersDB = client.db("usersDB");
+    const usersCollection = usersDB.collection("usersCollection");
+
+    app.post("/users", async (req, res) => {
+      const newUser = req.body;
+      const result = await usersCollection.insertOne(newUser);
+      res.send(result);
+    });
+
     // Send a ping to confirm successful connection
     await client.db("admin").command({ ping: 1 });
     console.log(
@@ -30,14 +40,10 @@ async function run() {
     );
   } finally {
     // Ensures that the client will close when you finish/error
-    await client.close();
+    // await client.close();
   }
 }
 run().catch(console.dir);
-
-app.get("/", (req, res) => {
-  res.send("Hello Server");
-});
 
 app.listen(PORT, () => {
   console.log(`Your server running on port http://localhost:${PORT}`);
